@@ -21,7 +21,7 @@ class Patient:
         self._stateMonitor = PatientStateMonitor(parameters)
         # simulation time step
         self._delta_t = parameters.get_delta_t()
-        self._finalstate = []
+        self._stroke = 0
     def simulate(self, sim_length):
         """ simulate the patient over the specified simulation length """
 
@@ -47,13 +47,14 @@ class Patient:
             # increment time step
             k += 1
 
+
     def get_survival_time(self):
         """ returns the patient's survival time"""
         return self._stateMonitor.get_survival_time()
 
     def get_time_to_AIDS(self):
         """ returns the patient's time to AIDS """
-        return self._stateMonitor.get_time_to_AIDS()
+
 
 
 
@@ -68,13 +69,14 @@ class PatientStateMonitor:
         self._survivalTime = 0          # survival time
         self._timeToAIDS = 0        # time to develop AIDS
         self._ifDevelopedAIDS = False   # if the patient developed AIDS
-
+        self._stroke = 0
     def update(self, k, next_state):
         """
         :param k: current time step
         :param next_state: next state
         """
-
+        if self.get_current_state() == P.HealthStats.Stroke:
+            self._stroke = self._stroke + 1
         # if the patient has died, do nothing
         if not self.get_if_alive():
             return
@@ -90,6 +92,10 @@ class PatientStateMonitor:
 
         # update current health state
         self._currentState = next_state
+        return self.get_time_to_AIDS()
+
+    def get_stroke_number(self):
+        return self._stroke
 
     def get_if_alive(self):
         result = True
@@ -120,6 +126,7 @@ class PatientStateMonitor:
             return self._timeToAIDS
         else:
             return None
+
 
 
 class Cohort:
@@ -164,14 +171,14 @@ class CohortOutputs:
 
         self._survivalTimes = []        # patients' survival times
         self._times_to_AIDS = []        # patients' times to AIDS
-        self._wellnumber= 0
+        self._stroke_total_number = []
         # survival curve
         self._survivalCurve = \
             PathCls.SamplePathBatchUpdate('Population size over time', id, simulated_cohort.get_initial_pop_size())
 
         # find patients' survival times
         for patient in simulated_cohort.get_patients():
-
+            self._stroke_total_number.append(patient._stateMonitor.get_stroke_number())
             # get the patient survival time
             survival_time = patient.get_survival_time()
             if not (survival_time is None):
@@ -183,12 +190,12 @@ class CohortOutputs:
             if not (time_to_AIDS is None):
                 self._times_to_AIDS.append(time_to_AIDS)
 
-            if patient._stateMonitor == P.HealthStats.Well:
-                self._wellnumber+=1
+
+
         # summary statistics
         self._sumStat_survivalTime = StatCls.SummaryStat('Patient survival time', self._survivalTimes)
         self._sumState_timeToAIDS = StatCls.SummaryStat('Time until AIDS', self._times_to_AIDS)
-
+        self._sumStat_strokenumber = StatCls.SummaryStat("number of stroke",self.get_stroke_total())
     def get_survival_times(self):
         return self._survivalTimes
 
@@ -203,5 +210,8 @@ class CohortOutputs:
 
     def get_survival_curve(self):
         return self._survivalCurve
-    def get_well_patient(self):
-        return self._wellnumber
+
+    def get_stroke_total(self):
+        return self._stroke_total_number
+    def get_stroke_range(self):
+        return self._sumStat_strokenumber

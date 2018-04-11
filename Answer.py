@@ -7,6 +7,7 @@ import scr.FigureSupport as Figs
 import scr.FormatFunctions as F
 import InputData as Settings
 import ParameterClasses as P
+import scr.StatisticalClasses as str
 #Problem3
 print('Problem3')
 
@@ -64,12 +65,23 @@ PathCls.graph_sample_path(
 
 
 #Problem7
+print("Problem7")
 
-print(simOutputs2.get_well_patient())
+print("Estimate of mean storke times of not using anticoagulation:",simOutputs.get_stroke_range().get_mean())
+print("Estimate of mean storke times of not using anticoagulation:",simOutputs2.get_stroke_range().get_mean())
 Figs.graph_histogram(
-    data=test.get_well_patient(),
-    title='Survival times of patients with HIV',
-    x_label='Survival time (years)',
+    data=simOutputs.get_stroke_total(),
+    title='Stroke Number of No ANTI',
+    x_label='Number of Strokes',
     y_label='Counts',
     bin_width=1
 )
+
+Figs.graph_histogram(
+    data=simOutputs2.get_stroke_total(),
+    title='Stroke Number of WITH ANTI',
+    x_label='Number of Strokes',
+    y_label='Counts',
+    bin_width=1
+)
+
